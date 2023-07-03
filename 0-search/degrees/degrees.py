@@ -1,4 +1,5 @@
 import csv
+import queue
 import sys
 
 from util import Node, StackFrontier, QueueFrontier
@@ -90,10 +91,53 @@ def shortest_path(source, target):
     that connect the source to the target.
 
     If no possible path, returns None.
+
+    Model each person as a Node with:
+    state = person_id
+    action = movie_id
+
+    Use BFS for shortest path, so use a queue
     """
 
-    # TODO
-    raise NotImplementedError
+    initial_node = Node(state=source, parent=None, action=None)
+    queue_frontier = QueueFrontier()
+    queue_frontier.add(initial_node)
+
+    explored = set()
+
+    while True:
+
+        # Stop if frontier is empty as there is no solution
+        if queue_frontier.empty():
+            return None
+
+        # Remove node from frontier and mark it as explored
+        curr_node = queue_frontier.remove()
+        explored.add(curr_node.state)
+
+        # If source and target are the same, just return an empty list
+        if curr_node.state == target:
+            return []
+
+        # Expand current node and add child nodes to the frontier if they are not already inside or explored
+        for action, state in neighbors_for_person(curr_node.state):
+            if not queue_frontier.contains_state(state) and state not in explored:
+                child_node = Node(state=state, parent=curr_node, action=action)
+
+                # If child node contains the target state, return the solution immediately
+                if child_node.state == target:
+                    res = []
+                    curr_node = child_node
+
+                    while curr_node.parent is not None:
+                        res.append((curr_node.action, curr_node.state))
+                        curr_node = curr_node.parent
+                    res.reverse()
+                    return res
+                
+                # If child node does not contain target state, add it to the frontier
+                queue_frontier.add(child_node)
+
 
 
 def person_id_for_name(name):
