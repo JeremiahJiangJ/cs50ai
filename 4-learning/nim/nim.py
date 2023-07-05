@@ -101,7 +101,12 @@ class NimAI():
         Return the Q-value for the state `state` and the action `action`.
         If no Q-value exists yet in `self.q`, return 0.
         """
-        raise NotImplementedError
+        key = (tuple(state), action)
+
+        try: 
+            return self.q[key]
+        except KeyError:
+            return 0
 
     def update_q_value(self, state, action, old_q, reward, future_rewards):
         """
@@ -118,7 +123,11 @@ class NimAI():
         `alpha` is the learning rate, and `new value estimate`
         is the sum of the current reward and estimated future rewards.
         """
-        raise NotImplementedError
+        key = (tuple(state), action)
+        new_q = old_q + self.alpha * ((reward + future_rewards) - old_q)
+
+        self.q[key] = new_q
+        
 
     def best_future_reward(self, state):
         """
@@ -130,7 +139,18 @@ class NimAI():
         Q-value in `self.q`. If there are no available actions in
         `state`, return 0.
         """
-        raise NotImplementedError
+        best_reward = 0
+
+        available_actions = Nim.available_actions(state)
+
+        for action in available_actions:
+            q = self.get_q_value(state, action)
+
+            if q > best_reward:
+                best_reward = q
+
+        return best_reward
+       
 
     def choose_action(self, state, epsilon=True):
         """
@@ -147,7 +167,27 @@ class NimAI():
         If multiple actions have the same Q-value, any of those
         options is an acceptable return value.
         """
-        raise NotImplementedError
+        best_reward = 0
+        best_action = None
+
+        available_actions = Nim.available_actions(state)
+
+        for action in available_actions:
+            q = self.get_q_value(state, action)
+
+            if best_action is None or q > best_reward:
+                best_reward = q
+                best_action = action
+
+        if not epsilon:
+            if best_action is None:
+                best_action = random.choice(available_actions)
+            return best_action
+        else:
+            if random.random() < self.epsilon:
+                return random.choice(available_actions)
+            else:
+                return best_action
 
 
 def train(n):
