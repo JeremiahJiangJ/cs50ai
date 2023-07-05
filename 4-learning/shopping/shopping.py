@@ -1,8 +1,10 @@
 import csv
 import sys
+import pandas as pd
 
 from sklearn.model_selection import train_test_split
 from sklearn.neighbors import KNeighborsClassifier
+from sklearn.metrics import confusion_matrix
 
 TEST_SIZE = 0.4
 
@@ -59,15 +61,51 @@ def load_data(filename):
     labels should be the corresponding list of labels, where each label
     is 1 if Revenue is true, and 0 otherwise.
     """
-    raise NotImplementedError
+    data = pd.read_csv(filename)
+
+    binary_map = {True : 1, False : 0}
+
+    month_encoding = {
+        "Jan" : 0,
+        "Feb" : 1,
+        "Mar" : 2,
+        "Apr" : 3,
+        "May" : 4,
+        "June": 5,
+        "Jul" : 6,
+        "Aug" : 7,
+        "Sep" : 8,
+        "Oct" : 9,
+        "Nov" : 10,
+        "Dec" : 11
+    }
+
+    visitor_encoding = {
+        "Returning_Visitor" : 1,
+        "New_Visitor" : 0,
+        "Other" : 0
+    }
+    
+    data["Weekend"] = data["Weekend"].map(binary_map)
+    data["Revenue"] = data["Revenue"].map(binary_map)
+    data["Month"] = data["Month"].map(month_encoding)
+    data["VisitorType"] = data["VisitorType"].map(visitor_encoding)
+
+    labels = data["Revenue"].tolist()
+    evidence = data.drop(["Revenue"], axis=1).values.tolist()
+
+    return evidence, labels
 
 
-def train_model(evidence, labels):
+def train_model(evidence, labels, k=1):
     """
     Given a list of evidence lists and a list of labels, return a
     fitted k-nearest neighbor model (k=1) trained on the data.
     """
-    raise NotImplementedError
+    knn_model = KNeighborsClassifier(n_neighbors=k)
+    knn_model.fit(evidence, labels)
+
+    return knn_model
 
 
 def evaluate(labels, predictions):
@@ -85,7 +123,29 @@ def evaluate(labels, predictions):
     representing the "true negative rate": the proportion of
     actual negative labels that were accurately identified.
     """
-    raise NotImplementedError
+
+    # Using sklearn.metrics' confusion matrix
+    true_neg, false_pos, false_neg, true_pos = confusion_matrix(labels, predictions).ravel()
+    sensitivity = true_pos / (true_pos + false_neg)
+    specificity = true_neg / (true_neg + false_pos)
+
+    # Manual
+    #pos_actual = labels.count(1)
+    #neg_actual = labels.count(0)
+
+    #true_pos_manual = 0
+    #true_neg_manual = 0
+    #for i in range(len(labels)):
+    #    if labels[i] == predictions[i]:
+    #        if labels[i] == 1:
+    #            true_pos_1 += 1
+    #        else:
+    #            true_neg_1 += 1
+    #sensitivity_manual = true_pos_1 / pos_actual
+    #specificity_manual = true_neg_1 / neg_actual
+
+    
+    return sensitivity, specificity
 
 
 if __name__ == "__main__":
