@@ -87,7 +87,10 @@ def np_chunk(tree):
     for subtree in parented_tree.subtrees():
         if subtree.label() == "N":
             res.append(subtree.parent())
-
+    ## Sanity Check
+    #for i in res:
+    #    if i.label() != "NP":
+    #        print(f"{i} is not a noun phrase")
     return res
 
 
